@@ -1,0 +1,55 @@
+{
+  "output_dir": "output",
+  "workspace_dir": ".tmp_workspace",
+  "seed_repos": [
+    {"full_name": "GareBear99/FreeEQ8", "weight": 1.0}
+  ],
+  "delay_profile": {
+    "min_search_seconds": 2.0,
+    "max_search_seconds": 7.0,
+    "min_clone_seconds": 2.0,
+    "max_clone_seconds": 10.0,
+    "min_issue_seconds": 30.0,
+    "max_issue_seconds": 95.0,
+    "jitter_seconds": 1.25
+  },
+  "limits": {
+    "max_repos_per_run": 12,
+    "max_issue_posts_per_run": 2,
+    "max_issue_posts_per_day": 4,
+    "max_clone_depth": 1,
+    "max_files_scanned": 250,
+    "max_source_chars_per_file": 12000,
+    "min_similarity_score": 0.16,
+    "min_issue_confidence": 0.72
+  },
+  "search": {
+    "mode": "related",
+    "custom_queries": [
+      "audio plugin juce vst3 dsp stars:>=3",
+      "creative coding synth plugin language:C++"
+    ],
+    "include_forks": false,
+    "include_archived": false,
+    "min_stars": 2,
+    "pushed_after": "2025-01-01",
+    "languages": [],
+    "required_topics": []
+  },
+  "posting": {
+    "enabled": false,
+    "draft_only": true,
+    "require_manual_approval": false,
+    "allowlist": [],
+    "denylist": [],
+    "labels": ["ai-review"],
+    "skip_if_contributing_missing": false,
+    "avoid_existing_issue_titles_like": ["review", "bug", "issue", "feedback"]
+  },
+  "ai": {
+    "enabled": false,
+    "api_url": null,
+    "api_key_env": "AI_API_KEY",
+    "model": "gpt-4o-mini"
+  }
+}
