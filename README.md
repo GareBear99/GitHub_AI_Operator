@@ -122,7 +122,7 @@ Service Loop
 
 Clone the repository:
 
-git clone https://github.com/YOUR_USERNAME/arc-github-operator.git  
+
 cd arc-github-operator
 
 Create a virtual environment:
