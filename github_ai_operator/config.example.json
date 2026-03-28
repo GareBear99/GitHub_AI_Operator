@@ -1,0 +1,73 @@
+{
+  "_comment": "GitHub AI Operator config — seed with FreeEQ8, scout similar audio/JUCE repos",
+
+  "output_dir": "output",
+  "workspace_dir": ".tmp_workspace",
+
+  "seed_repos": [
+    { "full_name": "GareBear99/FreeEQ8", "weight": 2.5 },
+    { "full_name": "GareBear99/ARC-Core", "weight": 1.0 }
+  ],
+
+  "search": {
+    "mode": "hybrid",
+    "custom_queries": [
+      "juce audio plugin equalizer",
+      "vst3 parametric eq open source",
+      "audio dsp c++ plugin github",
+      "juce dsp filter plugin"
+    ],
+    "min_stars": 2,
+    "include_forks": false,
+    "include_archived": false,
+    "languages": ["C++"],
+    "required_topics": [],
+    "pushed_after": "2022-01-01"
+  },
+
+  "limits": {
+    "max_repos_per_run": 12,
+    "max_issue_posts_per_run": 2,
+    "max_issue_posts_per_day": 4,
+    "max_clone_depth": 1,
+    "max_files_scanned": 250,
+    "max_source_chars_per_file": 12000,
+    "min_similarity_score": 0.18,
+    "min_issue_confidence": 0.74,
+    "max_search_pages_per_query": 2,
+    "repost_cooldown_days": 30,
+    "duplicate_title_overlap_threshold": 0.72
+  },
+
+  "delay_profile": {
+    "min_search_seconds": 3.0,
+    "max_search_seconds": 10.0,
+    "min_clone_seconds": 4.0,
+    "max_clone_seconds": 14.0,
+    "min_issue_seconds": 25.0,
+    "max_issue_seconds": 100.0,
+    "jitter_seconds": 2.0
+  },
+
+  "posting": {
+    "enabled": false,
+    "draft_only": true,
+    "require_manual_approval": false,
+    "allowlist": [],
+    "denylist": [],
+    "labels": ["ai-review"],
+    "skip_if_contributing_missing": false,
+    "avoid_existing_issue_titles_like": ["review", "feedback", "bot", "automated", "ai"]
+  },
+
+  "ai": {
+    "enabled": false,
+    "api_url": "https://api.openai.com/v1/chat/completions",
+    "api_key_env": "OPENAI_API_KEY",
+    "model": "gpt-4o-mini",
+    "timeout_seconds": 120,
+    "max_retries": 2
+  },
+
+  "_intelligence_note": "Claude (Anthropic) is always tried first as the review brain. Set ANTHROPIC_API_KEY to enable it. The ai block above is an optional secondary fallback for other OpenAI-compatible endpoints. Heuristic-only reviews are never posted live — they are draft/report only."
+}
