@@ -1,256 +1,199 @@
-# ARC GitHub Operator
-Autonomous GitHub Discovery, Review, and Contribution Engine
+# GitHub AI Operator
 
-ARC GitHub Operator is a lightweight autonomous system that discovers repositories related to your projects, reviews them, catalogs insights, and optionally contributes feedback.
+Evidence-first GitHub scout and review operator for **discovering related repositories, generating review reports, and queueing high-confidence issue drafts**.
 
-It combines:
+This build is designed to be **safer than a naive autonomous poster**:
+- draft-first by default
+- approval queue support
+- cooldown history
+- per-run and per-day caps
+- duplicate checks against **open and closed** issues
+- evidence gate before live posting
 
-- GitHub search intelligence
-- automated repository analysis
-- ARC-style event cataloging
-- safe contribution workflows
-- continuous service operation
+## What it does
 
-The system is designed to run indefinitely with minimal resource usage while maintaining a clean structured catalog of activity.
+1. Reads one or more seed repositories.
+2. Builds related GitHub search queries from metadata, topics, README text, and sampled source signals.
+3. Searches public repositories via the GitHub API.
+4. Clones one candidate at a time into a temp workspace.
+5. Collects a lightweight structural snapshot.
+6. Runs one of these review layers:
+   - Anthropic / Claude
+   - Free / OpenAI-compatible providers
+   - heuristic fallback
+7. Saves JSON + Markdown reports locally.
+8. Optionally queues or posts a high-confidence issue.
+9. Deletes the clone and moves on.
 
----
+## Safety posture
 
-## Overview
+Default posture is safe:
+- `posting.enabled = false`
+- `posting.draft_only = true`
 
-ARC GitHub Operator runs as a local research and contribution engine.
+That means the operator will still scout, review, and write reports, but it will **not** mutate target repositories unless you explicitly enable live posting.
 
-It performs the following loop:
+Live posting is additionally protected by:
+- confidence threshold
+- evidence gate
+- allowlist / denylist
+- duplicate-title and duplicate-body checks
+- cooldown history
+- issue caps
 
-1. Discover related repositories
-2. Clone repository into temporary workspace
-3. Analyze structure and project metadata
-4. Generate review report
-5. Optionally post constructive feedback
-6. Store catalog records in ARC database
-7. Clean workspace and continue
+## Current strengths
 
-All activity is logged and cataloged for reproducibility.
+- related repo discovery from your own repos
+- report generation with Markdown + JSON output
+- approval queue bundles for manual review
+- contribution-file awareness
+- duplicate checks across open and closed issues
+- label-safe posting
+- review-layer fallback stack
 
----
+## Current limits
 
-## Key Features
+This is **not** a full semantic code auditor yet.
+It currently works best as a:
+- scout
+- triage assistant
+- issue-draft generator
+- manual-review accelerator
 
-### Repository Discovery
-Automatically searches GitHub using:
+It does **not** run full CI, execute tests inside target repos, or guarantee that an AI-generated review is correct.
 
-- keywords derived from your repositories
-- custom topic queries
-- language filters
-- star thresholds
-- update activity
+## Project layout
 
-### Automated Review Engine
-Each repository is analyzed for:
+```text
+github_ai_operator/
+├── github_ai_operator/
+│   ├── __init__.py
+│   ├── ai_client.py
+│   ├── anthropic_client.py
+│   ├── config.py
+│   ├── delay.py
+│   ├── engine.py
+│   ├── free_llm_client.py
+│   ├── github_api.py
+│   ├── issue_writer.py
+│   ├── models.py
+│   ├── review.py
+│   └── similarity.py
+├── config.example.json
+├── README.md
+├── requirements.txt
+└── scout.py
+```
 
-- project structure
-- README completeness
-- dependency configuration
-- test presence
-- maintainability indicators
-- improvement opportunities
+## Requirements
 
-### ARC Catalog System
-Every action is recorded using an append-only catalog.
+- Python 3.10+
+- `git`
+- a GitHub token in `GITHUB_TOKEN`
 
-Stored data includes:
+Optional:
+- `ANTHROPIC_API_KEY`
+- provider-specific AI keys if you want richer review generation
 
-- repository discovery
-- review reports
-- contribution actions
-- system heartbeats
+## Setup
 
-This makes the system restart-safe and audit-friendly.
-
-### Continuous Operation
-The operator can run in service mode and perform repeated scans indefinitely.
-
-It maintains:
-
-- rate limit awareness
-- randomized delays
-- state memory
-- catalog persistence
-
-### Workspace Isolation
-Repositories are cloned into temporary directories.
-
-After analysis they are removed to keep disk usage minimal.
-
-### Dashboard Generation
-A local HTML dashboard summarizes:
-
-- repositories analyzed
-- review reports
-- catalog entries
-- system status
-
----
-
-## Architecture
-
-ARC Operator
-
-Discovery Engine  
-→ related repo search  
-→ custom topic search  
-
-Review Engine  
-→ repository structure analysis  
-→ heuristic checks  
-→ improvement suggestions  
-
-Contribution Engine  
-→ draft review reports  
-→ optional GitHub issue creation  
-
-ARC Catalog  
-→ SQLite event store  
-→ JSONL receipts  
-
-Service Loop  
-→ scheduled scanning  
-→ rate-limit pacing
-
----
-
-## Installation
-
-Clone the repository:
-
-
-cd arc-github-operator
-
-Create a virtual environment:
-
-python3 -m venv .venv  
+```bash
+python3 -m venv .venv
 source .venv/bin/activate
-
-Install dependencies:
-
 pip install -r requirements.txt
+cp config.example.json config.json
+export GITHUB_TOKEN="YOUR_FINE_GRAINED_PAT"
+```
 
-Create configuration:
+## Quick start
 
-python scout.py init --out config.json
+Print generated queries:
 
-Set your GitHub token:
+```bash
+python scout.py --config config.json --print-queries
+```
 
-export GITHUB_TOKEN=YOUR_FINE_GRAINED_PAT
+Run safely in draft mode:
 
----
+```bash
+python scout.py --config config.json
+```
 
-## Usage
+Dry run only:
 
-Generate Search Queries
+```bash
+python scout.py --config config.json --dry-run
+```
 
-python scout.py queries --config config.json
+## Output
 
-Run a Single Scan
+```text
+output/
+  owner__repo.json
+  owner__repo.md
+  index.json
+  run_summary.json
+  daily_state.json
+  repo_history.json
+  approval_queue/
+    owner__repo.json
+    owner__repo.md
+```
 
-python scout.py run --config config.json
+## Recommended usage pattern
 
-Continuous Service Mode
+### Mode A — Scout only
+Use this to discover related repositories and generate reports.
 
-python scout.py service --config config.json
-
-ARC System Status
-
-python scout.py arc-status --config config.json
-
-Generate Dashboard
-
-python scout.py dashboard --config config.json
-
----
-
-## Configuration Example
-
-{
-  "seed_repos": [
-    "YOUR_USERNAME/repo1",
-    "YOUR_USERNAME/repo2"
-  ],
-  "custom_queries": [
-    "juce vst3 audio-plugin",
-    "game engine c++"
-  ],
-  "max_repos_per_run": 10,
-  "draft_only": true,
-  "min_stars": 5
+```json
+"posting": {
+  "enabled": false,
+  "draft_only": true
 }
+```
 
----
+### Mode B — Approval queue
+Use this when you want strong drafts but still want a human gate.
 
-## Safety Controls
+```json
+"posting": {
+  "enabled": true,
+  "draft_only": false,
+  "require_manual_approval": true,
+  "allowlist": ["owner/repo"]
+}
+```
 
-The operator includes safeguards to prevent abuse:
+### Mode C — Live posting
+Only use this once you have tuned thresholds and are confident in the evidence quality.
 
-- draft-only contribution mode
-- duplicate issue detection
-- per-run contribution limits
-- randomized request pacing
-- GitHub rate limit awareness
+```json
+"posting": {
+  "enabled": true,
+  "draft_only": false,
+  "allowlist": ["owner/repo"]
+}
+```
 
-These controls ensure the system behaves respectfully within the open source ecosystem.
+## Best practices
 
----
+- keep volume low
+- keep relevance high
+- verify reports before posting live
+- prefer allowlists over broad posting
+- use the approval queue first
+- treat heuristic-only reviews as drafts, not final judgment
 
-## Data Storage
+## What changed in this hardened version
 
-arc_catalog.db  
-logs/  
-reports/  
-dashboard/
-
-ARC catalog contains:
-
-- repository discoveries
-- review metadata
-- system heartbeat records
-- contribution history
-
----
-
-## Size
-
-Current lightweight operator scaffold:
-
-~50 KB
-
-Disk usage remains small because cloned repositories are deleted after analysis.
-
-Catalog storage grows slowly as runs accumulate.
-
----
-
-## Roadmap
-
-Planned improvements:
-
-- containerized repository testing
-- language-specific lint engines
-- semantic code analysis
-- repository similarity scoring
-- distributed scanning nodes
-- GitHub App authentication
-
----
+- fixed packaging layout
+- added approval queue bundles
+- improved duplicate detection
+- checks open + closed issues
+- evidence gate before live posting
+- stronger snapshot extraction with symbol samples
+- safer run/report flow
 
 ## License
 
-MIT License
-
----
-
-## Philosophy
-
-ARC GitHub Operator is designed around a simple principle:
-
-Discover interesting projects, study them, and contribute useful insights while keeping the process reproducible and respectful.
-
-Automation should explore and improve the ecosystem — not create noise.
+MIT
